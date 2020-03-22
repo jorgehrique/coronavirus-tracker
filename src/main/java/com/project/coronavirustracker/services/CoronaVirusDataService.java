@@ -13,14 +13,14 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CoronaVirusDataService {
 
     private static String VIRUS_DATA_URL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv";
-    private List<LocationStats> allStats = new ArrayList<>();
+    private Collection<LocationStats> allStats = new ArrayList<>();
 
     @PostConstruct
     @Scheduled(cron = "* * 12 * * *")
@@ -34,15 +34,32 @@ public class CoronaVirusDataService {
         StringReader csvStringReader = new StringReader(response.body());
         Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(csvStringReader);
 
-        List<LocationStats> newStats = new ArrayList<>();
+        Collection<LocationStats> newStats = new HashSet<>();
         for (CSVRecord record : records) {
             newStats.add(new LocationStats(record));
         }
-        this.allStats = newStats;
+        this.allStats = agruparPaises(newStats);
     }
 
-    public List<LocationStats> getAllStats(){
+    public Collection<LocationStats> getAllStats(){
         return this.allStats;
     }
 
+    private Collection<LocationStats> agruparPaises(Collection<LocationStats> collection){
+        Collection<LocationStats> agrupada = new ArrayList<>();
+
+        for(LocationStats ls : collection){
+
+            List<LocationStats> temp = collection
+                    .stream()
+                    .filter(obj -> obj.getCountry().equals(ls.getCountry()))
+                    .collect(Collectors.toList());
+
+            LocationStats ag = new LocationStats();
+            ag.setCountry(ls.getCountry());
+            temp.forEach(obj -> ag.agrupar(obj));
+            agrupada.add(ag);
+        }
+        return new HashSet<>(agrupada);
+    }
 }

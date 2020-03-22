@@ -2,7 +2,9 @@ package com.project.coronavirustracker.models;
 
 import org.apache.commons.csv.CSVRecord;
 
-public class LocationStats {
+import java.util.Objects;
+
+public class LocationStats implements Comparable {
 
     private String country;
     private String state;
@@ -10,7 +12,13 @@ public class LocationStats {
     private Integer lastDayTotalCases;
     private Integer lastWeekTotalCases;
 
-    public LocationStats() {}
+    public LocationStats() {
+        this.country = "";
+        this.state = "";
+        this.latestTotalCases = 0;
+        this.lastDayTotalCases = 0;
+        this.lastWeekTotalCases = 0;
+    }
 
     public LocationStats(CSVRecord csvRecord) {
         this.country = csvRecord.get("Country/Region");
@@ -69,6 +77,23 @@ public class LocationStats {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LocationStats that = (LocationStats) o;
+        return Objects.equals(country, that.country) &&
+                Objects.equals(state, that.state) &&
+                Objects.equals(latestTotalCases, that.latestTotalCases) &&
+                Objects.equals(lastDayTotalCases, that.lastDayTotalCases) &&
+                Objects.equals(lastWeekTotalCases, that.lastWeekTotalCases);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(country, state, latestTotalCases, lastDayTotalCases, lastWeekTotalCases);
+    }
+
+    @Override
     public String toString() {
         return "LocationStats{" +
                 "country='" + country + '\'' +
@@ -77,5 +102,25 @@ public class LocationStats {
                 ", lastDayTotalCases=" + lastDayTotalCases +
                 ", lastWeekTotalCases=" + lastWeekTotalCases +
                 '}';
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        LocationStats ls = (LocationStats) o;
+        if(this.latestTotalCases > ls.getLatestTotalCases()){
+            return -1;
+        } else if(this.latestTotalCases < ls.getLatestTotalCases()){
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    public LocationStats agrupar(LocationStats ls){
+        this.state = "";
+        this.latestTotalCases += ls.getLatestTotalCases();
+        this.lastDayTotalCases += ls.getLastDayTotalCases();
+        this.lastWeekTotalCases += ls.getLastWeekTotalCases();
+        return this;
     }
 }
